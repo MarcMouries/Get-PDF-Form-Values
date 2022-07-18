@@ -53,7 +53,18 @@ const getPDF_Form_Values = async (file_path) => {
             else if (type == 'PDFCheckBox' ) {
                 console.log('Field value = ', field.isChecked())
                 result[field_name] = field.isChecked();
-
+            }
+            else if (type == 'PDFDropdown' ) {
+                console.log('Field value = ', field.getSelected())
+                result[field_name] = field.getSelected();
+            }
+            else if (type == 'PDFRadioGroup' ) {
+                console.log('Field value = ', field.getSelected())
+                result[field_name] = field.getSelected();
+            }
+            else if (type == 'PDFOptionList' ) {
+                console.log('Field value = ', field.getSelected())
+                result[field_name] = field.getSelected();
             }
             else {
                 console.log('NEED TO HANDLE field of type:', type)
