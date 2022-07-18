@@ -4,26 +4,18 @@ const { PDFDocument } = require('pdf-lib');
 const { exit } = require('process');
 
 
-if (process.argv.length != 3) {
-    console.error("Error: Missing path of PDF file to get the form values from.")
-    exit(999);
+
+
+function print_usage() {
+    console.error("Usage:")
+    console.error("  node get_field_values.js  --types <pdf file path>    ")
+    console.error("  node get_field_values.js  --values <pdf file path>    ")
 }
-const file_path = process.argv[2];
 
-// const pdf_file_path = '/Users/marc.mouries/Library/CloudStorage/OneDrive-ServiceNow/Accounts/NOAA_Read-PDF/Nomination_form_FILLED.pdf'
 
-console.log("Reading file: " + file_path);
+const getPDF_Form = async (file_path) => {
+    console.log("Reading file: " + file_path);
 
-const field_names = [
-    'Last', 
-    'Email Address',
-    'Home Phone',
-    'Male'
-]
-
-var result = {};
-
-const getPDF_Form_Values = async (file_path) => {
     let formPdfBytes = fs.readFileSync(file_path)
     try {
         // Load a PDF with form fields
@@ -31,57 +23,77 @@ const getPDF_Form_Values = async (file_path) => {
 
         // Get the form containing all the fields
         const form = pdfDoc.getForm();
-
-        /*
-        const fields = form.getFields()
-        fields.forEach(field => {
-            const type = field.constructor.name
-            const name = field.getName()
-            console.log(`${type}: '${name}'`)
-        })
-*/
-        field_names.forEach(field_name => {
-            let field = form.getField(field_name);
-            let type = field.constructor.name;
-           // console.log('Field type = ', type);
-
-            if (type == 'PDFTextField' ) {
-                console.log('Field value = ', field.getText())
-                result[field_name] = field.getText();
-
-            }
-            else if (type == 'PDFCheckBox' ) {
-                console.log('Field value = ', field.isChecked())
-                result[field_name] = field.isChecked();
-            }
-            else if (type == 'PDFDropdown' ) {
-                console.log('Field value = ', field.getSelected())
-                result[field_name] = field.getSelected();
-            }
-            else if (type == 'PDFRadioGroup' ) {
-                console.log('Field value = ', field.getSelected())
-                result[field_name] = field.getSelected();
-            }
-            else if (type == 'PDFOptionList' ) {
-                console.log('Field value = ', field.getSelected())
-                result[field_name] = field.getSelected();
-            }
-            else {
-                console.log('NEED TO HANDLE field of type:', type)
-
-            }
-
-        })
-
-        console.log(result)
-
-
-           const field_Email_Address = form.getTextField('Email Address')
-           console.log('Text field contents:', field_Email_Address.getText())
-
-
+        return form;
     } catch (error) {
         throw new Error(error)
     }
 }
-getPDF_Form_Values(file_path)
+
+
+const list_PDF_Form_Fields = async (file_path) => {
+    const form = await getPDF_Form(file_path);
+    const fields = form.getFields()
+    console.log("Field Name           | Field Type");
+    console.log("---------------------------------");
+    fields.forEach(field => {
+        const field_name = field.getName()
+        const type = field.constructor.name
+        const to_print = field_name.padEnd(20, ' ') + " | " + type.substring(3);
+        console.log(to_print)
+    })
+}
+
+
+const list_PDF_Form_Values = async (file_path) => {
+    var result = {};
+
+    const form = await getPDF_Form(file_path);
+    const fields = form.getFields()
+
+    fields.forEach(field => {
+        const field_name = field.getName()
+        const type = field.constructor.name
+        // console.log('Field type = ', type);
+
+        if (type == 'PDFTextField') {
+            result[field_name] = field.getText();
+        }
+        else if (type == 'PDFCheckBox') {
+            result[field_name] = field.isChecked();
+        }
+        else if (type == 'PDFDropdown') {
+            result[field_name] = field.getSelected();
+        }
+        else if (type == 'PDFRadioGroup') {
+            result[field_name] = field.getSelected();
+        }
+        else if (type == 'PDFOptionList') {
+            result[field_name] = field.getSelected();
+        }
+        else {
+            console.log('Type is undefined for field:', field_name)
+        }
+    })
+    console.log(JSON.stringify(result, null, 4))
+}
+
+
+if (process.argv.length == 2) {
+    print_usage();
+    exit(999);
+}
+
+const option = process.argv[2];
+if (option == "--types" && process.argv.length == 4) {
+    console.log("list all the fields and their type");
+    const file_path = process.argv[3];
+    list_PDF_Form_Fields(file_path)
+}
+else if (option == "--values" && process.argv.length == 4) {
+    console.log("list all the fields and their value");
+    const file_path = process.argv[3];
+    list_PDF_Form_Values(file_path)
+} else {
+    print_usage();
+    exit(999);
+}
