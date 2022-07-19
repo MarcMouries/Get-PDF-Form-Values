@@ -1,5 +1,9 @@
 # PDF-Form-Reader
 
+Reads a PDF form document and prints the list of fields with their types and their values.
+
+Uses the library https://pdf-lib.js.org/ 
+
 
 ## Usage
 ```
@@ -9,8 +13,8 @@ Usage:
 
 Example:
 
-node get_field_values.js --types ./samples/OoPdfFormExample_v2.pdf
+node get_field_values.js --types ./samples/pdfFormExample.pdf
 
-node get_field_values.js --values ./samples/OoPdfFormExample_v2.pdf
+node get_field_values.js --values ./samples/pdfFormExample.pdf
 
 ```
