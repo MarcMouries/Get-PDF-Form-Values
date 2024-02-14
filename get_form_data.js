@@ -65,38 +65,43 @@ const list_PDF_Form_Fields = async (file_path) => {
 
 
 
-
 const list_PDF_Form_Values = async (file_path) => {
     var result = {};
 
     const form = await getPDF_Form(file_path);
     const fields = form.getFields()
 
-    fields.forEach(field => {
+    fields.forEach((field, index) => {
         const field_name = field.getName()
         const type = field.constructor.name
+
+        console.log(`Index: ${index}, Field Name: ${field_name}, Type: ${type}`);
 
         if (type == 'PDFTextField') {
             result[field_name] = field.getText();
         }
         else if (type == 'PDFCheckBox') {
-            result[field_name] = field.isChecked();
+            console.log(`Options: ${field.getOptions()}`);
+            result[field_name] = field.getOptions();
         }
         else if (type == 'PDFDropdown') {
+            console.log(`Options: ${field.getOptions()}`);
             const selections = field.getSelected();
             if (! field.isMultiselect()) {
                 let selected_value = selections[0];
-                result[field_name] = selected_value;
+                result[field_name] = field.getOptions();
             }
             else {
                 result[field_name] = field.getSelected();
             }
         }
         else if (type == 'PDFRadioGroup') {
-            result[field_name] = field.getSelected();
+            console.log(`Options: ${field.getOptions()}`);
+            result[field_name] = field.getOptions();
         }
         else if (type == 'PDFOptionList') {
-            result[field_name] = field.getSelected();
+            console.log(`Options: ${field.getOptions()}`);
+            result[field_name] = field.getOptions();
         }
         else {
             console.log('Type is undefined for field:', field_name)
@@ -104,6 +109,9 @@ const list_PDF_Form_Values = async (file_path) => {
     })
     console.log(JSON.stringify(result, null, 4))
 }
+
+
+
 
 
 if (process.argv.length == 2) {
