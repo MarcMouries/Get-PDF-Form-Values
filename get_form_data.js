@@ -3,9 +3,6 @@ const fs = require('fs')
 const { PDFDocument } = require('pdf-lib');
 const { exit } = require('process');
 
-
-
-
 function print_usage() {
     console.error("Usage:")
     console.error("  node get_field_values.js  --types <pdf file path>    ")
@@ -18,10 +15,7 @@ const getPDF_Form = async (file_path) => {
 
     let formPdfBytes = fs.readFileSync(file_path)
     try {
-        // Load a PDF with form fields
         const pdfDoc = await PDFDocument.load(formPdfBytes)
-
-        // Get the form containing all the fields
         const form = pdfDoc.getForm();
         return form;
     } catch (error) {
@@ -33,22 +27,43 @@ const getPDF_Form = async (file_path) => {
 const list_PDF_Form_Fields = async (file_path) => {
     const form = await getPDF_Form(file_path);
     const fields = form.getFields();
-    console.log("╔════════════════════════════════╦════════════════╦════════════════════╗")
-    console.log("║ Field Name                     ║  Field Type    ║  Notes             ║");
-    console.log("╠════════════════════════════════╬════════════════╬════════════════════╣")
-    fields.forEach(field => {
-        const field_name = field.getName()
-        const field_type = field.constructor.name;
-        let to_print = "║ " + field_name.padEnd(30, ' ') + " ║ " + field_type.substring(3).padEnd(15, ' ') + "║ ";
 
-        if (field_type == 'PDFDropdown') {
-            const selections = field.getSelected()
-            to_print  += 'Multiselect:' + field.isMultiselect();
-        }
-        console.log(to_print.padEnd(71, ' ') + "║ ")
-    })
-    console.log("╚════════════════════════════════╩════════════════╩════════════════════╝");
-}
+    // Column widths remain the same
+    const numColumnWidth = 5;
+    const nameColumnWidth = 34;
+    const typeColumnWidth = 15;
+    const notesColumnWidth = 20;
+
+    console.log(`╔${'═'.repeat(numColumnWidth)}╦${'═'.repeat(nameColumnWidth)}╦${'═'.repeat(typeColumnWidth)}╦${'═'.repeat(notesColumnWidth)}╗`);
+    console.log(`║ ${' '.repeat(numColumnWidth - 3)}# ║ Field Name${' '.repeat(nameColumnWidth - 11)}║ Field Type${' '.repeat(typeColumnWidth - 11)}║ Notes${' '.repeat(notesColumnWidth - 6)}║`);
+    console.log(`╠${'═'.repeat(numColumnWidth)}╬${'═'.repeat(nameColumnWidth)}╬${'═'.repeat(typeColumnWidth)}╬${'═'.repeat(notesColumnWidth)}╣`);
+
+    fields.forEach((field, index) => {
+        const fieldNameLines = wrapText(field.getName(), nameColumnWidth - 6); // Adjusting for padding correctly
+        const fieldTypeText = field.constructor.name.substring(3);
+    
+        fieldNameLines.forEach((line, lineIndex) => {
+            const numField = lineIndex === 0 ? ` ${String(index + 1)}` : ' ';     
+            const nameField = ` ${line.padEnd(nameColumnWidth - 6)} `;
+    
+            const typeField = lineIndex === 0 
+                ? ` ${fieldTypeText.padEnd(typeColumnWidth - 6)} ` 
+                : ' '.repeat(typeColumnWidth);
+    
+            const notesField = ' '.repeat(notesColumnWidth - 1);
+    
+            console.log(`║${numField.padEnd(numColumnWidth)}║${nameField.padEnd(nameColumnWidth)}║${typeField.padEnd(typeColumnWidth)}║${notesField.padEnd(notesColumnWidth)}║`);
+        });
+    });
+    
+    
+    console.log(`╚${'═'.repeat(numColumnWidth)}╩${'═'.repeat(nameColumnWidth)}╩${'═'.repeat(typeColumnWidth)}╩${'═'.repeat(notesColumnWidth)}╝`);
+};
+
+
+
+
+
 
 
 const list_PDF_Form_Values = async (file_path) => {
@@ -110,3 +125,21 @@ else if (option == "--values" && process.argv.length == 4) {
     print_usage();
     exit(999);
 }
+
+const wrapText = (text, maxLineLength) => {
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = words[0];
+
+    for (let i = 1; i < words.length; i++) {
+        if (currentLine.length + words[i].length + 1 <= maxLineLength) {
+            currentLine += ' ' + words[i];
+        } else {
+            lines.push(currentLine);
+            currentLine = words[i];
+        }
+    }
+    lines.push(currentLine);
+
+    return lines;
+};
