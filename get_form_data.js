@@ -28,9 +28,11 @@ const list_PDF_Form_Fields = async (file_path) => {
     const form = await getPDF_Form(file_path);
     const fields = form.getFields();
 
+    fields.sort((a, b) => a.getName().localeCompare(b.getName()));
+
     // Column widths remain the same
     const numColumnWidth = 5;
-    const nameColumnWidth = 34;
+    const nameColumnWidth = 70;
     const typeColumnWidth = 15;
     const notesColumnWidth = 20;
 
@@ -81,6 +83,7 @@ const list_PDF_Form_Values = async (file_path) => {
             result[field_name] = field.getText();
         }
         else if (type == 'PDFCheckBox') {
+            console.log(`CheckBox Text: ${field.getText()}`);
             console.log(`Options: ${field.getOptions()}`);
             result[field_name] = field.getOptions();
         }
