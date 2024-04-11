@@ -9,13 +9,15 @@ function print_usage() {
     console.error("  node get_field_values.js  --values <pdf file path>    ")
 }
 
-
 const getPDF_Form = async (file_path) => {
     console.log("Reading file: " + file_path);
 
     let formPdfBytes = fs.readFileSync(file_path)
     try {
-        const pdfDoc = await PDFDocument.load(formPdfBytes)
+        const pdfDoc = await PDFDocument.load(
+            formPdfBytes,
+            { ignoreEncryption: true }
+        )
         const form = pdfDoc.getForm();
         return form;
     } catch (error) {
